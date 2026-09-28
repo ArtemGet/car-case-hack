@@ -17,6 +17,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from conftest import weights_available
+
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 TOOL_PATH = os.path.join(REPO, "tools", "build_gallery.py")
 SIGLIP_ONNX = os.path.join(REPO, "artifacts", "siglip2_fp16.onnx")
@@ -42,10 +44,11 @@ try:
 except Exception:  # noqa: BLE001
     _HAS_ORT = False
 
-_HAS_WEIGHTS = os.path.exists(SIGLIP_ONNX)
+# weights_available() == False и для отсутствующего файла, и для git-lfs-указателя.
+_HAS_WEIGHTS = weights_available(SIGLIP_ONNX)
 _needs_weights = pytest.mark.skipif(
     not (_HAS_WEIGHTS and _HAS_ORT),
-    reason="artifacts/siglip2_fp16.onnx или onnxruntime отсутствуют")
+    reason="artifacts/siglip2_fp16.onnx (нет или LFS-указатель) или onnxruntime отсутствуют")
 
 
 def _make_dataset(root, n=5, missing=False):

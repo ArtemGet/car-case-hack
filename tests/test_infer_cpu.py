@@ -21,6 +21,8 @@ import numpy as np
 import pytest
 from PIL import Image
 
+from conftest import weights_available
+
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SIGLIP_ONNX = os.path.join(REPO, "artifacts", "siglip2_fp16.onnx")
 
@@ -48,8 +50,8 @@ def _df(rows):
     return pd.DataFrame(rows, columns=["image_id", "x", "y", "w", "h"])
 
 
-@pytest.mark.skipif(not os.path.exists(SIGLIP_ONNX),
-                    reason="artifacts/siglip2_fp16.onnx absent")
+@pytest.mark.skipif(not weights_available(SIGLIP_ONNX),
+                    reason="artifacts/siglip2_fp16.onnx absent or a git-lfs pointer")
 def test_cpu_backend_real_onnx(tmp_path):
     from service.infer.cpu_backend import SiglipCpuBackend, rss_mb
 

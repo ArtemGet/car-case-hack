@@ -23,7 +23,8 @@ from conftest import make_variant
 TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(TESTS_DIR)
 VALIDATOR = os.path.join(ROOT, "tools", "validate_format.py")
-EXAMPLE = os.path.join(ROOT, "docs", "Датасет", "example_submission")
+# Самодостаточная фикстура в git (docs/ в сдачу не входит).
+EXAMPLE = os.path.join(TESTS_DIR, "fixtures", "example_submission")
 
 
 def run_validator(out_dir, query, gallery):

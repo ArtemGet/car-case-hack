@@ -34,7 +34,9 @@ artifacts/*
 
 # ===== Временное для передачи на стенд (не коммитим) =====
 _transfer/
+car-case-demo-pack/
 demo_pack.zip
+car-case-demo-pack.zip
 *.zip
 
 # ===== Прочее =====

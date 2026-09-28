@@ -17,6 +17,40 @@ TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
 FIXTURES = os.path.join(TESTS_DIR, "fixtures")
 VALID = os.path.join(FIXTURES, "valid")
 
+# ---------------------------------------------------------------------------
+# Доступность весов (устойчиво к git-lfs-указателям).
+#
+# GitHub Actions без `lfs: true` выкладывает для больших файлов НЕ бинарь,
+# а текстовый LFS-указатель:
+#     version https://git-lfs.github.com/spec/v1
+#     oid sha256:...
+#     size 189055380
+# Такой файл существует и «не пуст», но ONNX его не читает
+# (InvalidProtobuf ... Protobuf parsing failed). Поэтому отмечаем веса
+# недоступными, если файла нет, он меньше 1 МБ (указатель ~130 байт) или
+# начинается с LFS-заголовка.
+# ---------------------------------------------------------------------------
+_LFS_MAGIC = b"version https://git-lfs"
+_LFS_MIN_BYTES = 1_000_000
+
+
+def _looks_like_lfs_pointer(path, min_bytes=_LFS_MIN_BYTES):
+    try:
+        if not os.path.isfile(path):
+            return True
+        if os.path.getsize(path) < min_bytes:
+            return True
+        with open(path, "rb") as f:
+            head = f.read(len(_LFS_MAGIC))
+    except OSError:
+        return True
+    return head.startswith(_LFS_MAGIC)
+
+
+def weights_available(path, min_bytes=_LFS_MIN_BYTES):
+    """True только для реального файла весов (не отсутствует и не LFS-указатель)."""
+    return not _looks_like_lfs_pointer(path, min_bytes=min_bytes)
+
 
 def _write_csv(path, rows):
     with open(path, "w", encoding="utf-8", newline="") as f:
