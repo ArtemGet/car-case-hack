@@ -20,23 +20,29 @@ env/
 *.swp
 *.swo
 
-dataset/
-data/
-models/
-runs/
-out/
+# ВАЖНО: якорь '/' — иначе 'data/' и 'models/' матчат и код reid/data, reid/models.
+/dataset/
+/data/
+/models/
+/runs/
+/out/
 
 artifacts/*
 !artifacts/dinov2_b_fp16.onnx
 !artifacts/siglip2_fp16.onnx
 !artifacts/data_manifest.json
 
+# ===== Временное для передачи на стенд (не коммитим) =====
+_transfer/
+demo_pack.zip
+*.zip
+
 # ===== Прочее =====
 *.log
 .DS_Store
 Thumbs.db
 node_modules/
-dist/
+/dist/
 !web/dist/
 !web/dist/**
 
