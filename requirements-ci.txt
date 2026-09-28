@@ -1,0 +1,46 @@
+# CI (CPU-only) dependency lock — exact pins. No ">=" anywhere.
+#
+# Scope: lint + unit tests (`tests/`, `reid/**`, `service/**`) on a CPU-only
+# GitHub Actions runner. This is deliberately NOT the GPU/runtime lock
+# (`requirements-runtime.txt`) nor the full training stack (`requirements.txt`):
+# the GPU/training extras (onnxruntime-gpu, optuna, tensorboard, matplotlib,
+# scikit-learn, opencv-python, faiss-cpu, onnx, timm, transformers) are not
+# imported by the test suite and are intentionally excluded.
+#
+# TORCH IS CPU-ONLY HERE. The torch/torchvision pins below must be installed
+# from the CPU wheel index, not PyPI (PyPI's default wheels are CUDA builds,
+# hundreds of MB larger):
+#     python -m pip install --index-url https://download.pytorch.org/whl/cpu \
+#         torch==2.6.0 torchvision==0.21.0
+# `.github/workflows/ci.yml` does exactly that in a dedicated step BEFORE
+# `pip install -r requirements-ci.txt`; a subsequent plain install then sees
+# them satisfied (==2.6.0 accepts the installed 2.6.0+cpu local version).
+#
+# Requirements are CPU-only; runtime base is Python 3.12 (see Dockerfile).
+
+# ---- test framework / lint ----
+pytest==9.1.1
+ruff==0.8.6
+
+# ---- core / tensor / imaging ----
+numpy==2.1.0
+pandas==2.2.3
+pillow==12.2.0
+pyyaml==6.0.2
+
+# ---- CPU torch (install via the CPU index — see header) ----
+torch==2.6.0
+torchvision==0.21.0
+
+# ---- ONNX runtime (CPU; replaces onnxruntime-gpu — same `onnxruntime` import
+#      namespace, so the two must NEVER be installed together) ----
+onnxruntime==1.26.0
+
+# ---- API ----
+fastapi==0.136.1
+uvicorn==0.52.1
+pydantic==2.13.4
+
+# ---- test-runtime helpers ----
+httpx==0.28.1      # starlette/fastapi TestClient transport
+psutil==7.1.0      # service.infer.cpu_backend.rss_mb()
