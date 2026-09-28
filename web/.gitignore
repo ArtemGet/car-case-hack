@@ -1,0 +1,9 @@
+node_modules/
+# NOTE: `dist/` is intentionally NOT ignored — the built bundle is committed so
+# `Dockerfile.prototype` / `docker-compose.prototype.yml` can serve the demo UI
+# fully offline. Rebuild with `npm ci && npm run build`.
+.vite/
+*.local
+*.log
+.env
+.env.*

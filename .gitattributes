@@ -1,0 +1,16 @@
+# Git LFS — сдаваемые веса хранятся через Git Large File Storage.
+#
+# Сдаваемые веса = РОВНО 2 ONNX (deploy champion variant A: fusion 224-only, TTA OFF).
+# Файлы `.onnx` >100 МБ превышают GitHub hard limit, поэтому оба идут через LFS:
+#   artifacts/siglip2_fp16.onnx     ~180 МБ
+#   artifacts/dinov2_b_fp16.onnx    ~165 МБ
+# TTA@280-граф (dinov2_b_280_fp16.onnx) и прочие dev-веса НЕ сдаются и здесь не перечислены.
+# Иначе `docker build` из чистого клона (Dockerfile COPY обоих ONNX) не найдёт файлы.
+#
+# Активировать один раз на машине:  git lfs install
+# После checkout LFS-файлы материализуются:  git lfs pull
+#
+# Альтернатива без LFS (описана в documentation/DEPLOYMENT.md §Publishing):
+# не хранить ONNX в git, а скачивать их по URL + sha256 шагом до `docker build`.
+artifacts/siglip2_fp16.onnx filter=lfs diff=lfs merge=lfs -text
+artifacts/dinov2_b_fp16.onnx filter=lfs diff=lfs merge=lfs -text

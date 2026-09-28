@@ -1,0 +1,71 @@
+# DEMO / PROTOTYPE image — CPU-only, NO GPU, for a small box (2 vCPU / 2 GB).
+#
+# NOT the graded image. The graded (оценка) build is `Dockerfile`
+# (`docker-compose.yml`, `--gpus all`); this file only mirrors its shape so a
+# demo can come up with `docker compose -f docker-compose.prototype.yml up`.
+#
+# Differences from `Dockerfile`:
+#   * installs `requirements-prototype.txt` (no torch / no onnxruntime-gpu),
+#   * copies ONLY `artifacts/siglip2_fp16.onnx` (the CPU-served backbone),
+#   * ENTRYPOINT is the HTTP API (uvicorn), not the batch runner,
+#   * no `--gpus`, no CUDA libs, no `docker/entrypoint.sh`.
+#
+# Multi-stage: build WITH network (pip), run OFFLINE with the weight baked in.
+# No `# syntax=` directive on purpose — only built-in instructions, so no extra
+# frontend-image pull is needed for the offline stand.
+
+# ---------------------------------------------------------------- builder ----
+FROM python:3.12-slim AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Build toolchain for any sdist-only wheel; kept out of the runtime image.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+COPY requirements-prototype.txt ./
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install -r requirements-prototype.txt
+
+# ---------------------------------------------------------------- runtime ----
+FROM python:3.12-slim AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+# Runtime OS deps only: libGL/libglib for Pillow/OpenCV, libgomp for
+# onnxruntime, curl for the container HEALTHCHECK. No build chain, no pip.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 libglib2.0-0 libgomp1 curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /opt/venv /opt/venv
+
+WORKDIR /app
+COPY reid/ ./reid/
+COPY service/ ./service/
+COPY tools/ ./tools/
+COPY configs/ ./configs/
+COPY web/dist/ ./web/dist/
+
+# Bake ONLY the CPU-served weight inside the image (offline inference, no
+# download at runtime). DINOv2 / fusion graphs stay in the graded image.
+COPY artifacts/siglip2_fp16.onnx ./artifacts/
+
+# Demo defaults: real CPU engine (SigLIP2 ONNX CPU EP) on the small box.
+ENV REID_API_ENGINE=infer \
+    REID_API_DEVICE=cpu
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+ENTRYPOINT ["uvicorn", "service.api.app:app", "--host", "0.0.0.0", "--port", "8000"]

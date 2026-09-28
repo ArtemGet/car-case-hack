@@ -1,0 +1,43 @@
+# W1-4: DINOv2 ViT-B/14 + GeM + BNNeck + ArcFace.
+# Self-supervised DINOv2 features + angular-margin head; bf16 AMP + warm-start EMA.
+# Differential LR: pretrained ViT backbone at 0.1x, randomly-init head at 1x.
+# Usage: python -m reid.train --config configs/dinov2_b.yaml --out runs/<exp_id> \
+#            --dataset "docs/Датасет/dataset"
+exp_name: dinov2_b_arcface
+backbone: dinov2_b               # timm vit_base_patch14_dinov2.lvd142m (input /14)
+pretrained: true
+image_size: 224                  # 224 = 16*14 (patch14); 252 = 18*14 also valid
+emb_dim: 512
+margin: 0.30
+scale: 30.0
+gem_p: 3.0
+
+epochs: 60
+p: 16                            # identities per batch
+k: 4                             # frames per identity per batch  (batch=64)
+lr: 3.0e-4                       # head lr; backbone lr = lr * backbone_lr_scale
+backbone_lr_scale: 0.10          # fine-tune pretrained ViT gently
+weight_decay: 0.02
+warmup_epochs: 3
+label_smoothing: 0.10
+amp: bf16                        # null | bf16 | fp16
+ema: true
+ema_decay: 0.999
+ema_start: 3                     # warm-start EMA once the head is no longer random
+num_workers: 12                  # loader saturates ~8; >8 only adds Windows spawn cost
+prefetch_factor: 6
+device: cuda
+seed: 42
+
+val_fraction: 0.20
+open_set_fraction: 0.20
+eval_every: 1                    # evaluate every epoch (only the deployed source)
+eval_sources: auto               # raw before EMA, then EMA only (set "both" for A/B)
+reuse_val_loader: true           # one persistent val worker pool for the whole run
+eval_num_workers: 2              # fallback only (used when eval_tensor_cache: false)
+eval_tensor_cache: true          # decode val once -> val extract becomes GPU-bound
+eval_cache_workers: 0            # one-off decode at startup; 0 avoids Windows spawn
+eval_batch_size: 128
+channels_last: false             # only helps conv backbones (DINOv2 is a ViT)
+draft_factor: 1.2
+cache_size: 320

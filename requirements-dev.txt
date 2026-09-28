@@ -1,0 +1,9 @@
+# Development / CI dependencies — exact pins. Installs the runtime lock first.
+-r requirements.txt
+
+pytest==9.1.1
+ruff==0.8.6
+mypy==1.14.1
+
+# NOTE: pinned to the versions verified on the feed host; re-lock with the runtime
+# requirements at export time (see requirements.txt NOTE).

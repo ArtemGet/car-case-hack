@@ -1,0 +1,87 @@
+{
+  "created": "2026-09-26T22:33:21+00:00",
+  "protocol": "organisers-4.3",
+  "variant": "fusion",
+  "model": "fusion(w=0.6)",
+  "backend": "fusion",
+  "device": "cuda",
+  "torch": "2.6.0+cu124",
+  "cuda": "12.4",
+  "python": "3.12.2",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "input_size": 224,
+  "num_images": 1903,
+  "image_source": {
+    "images": "docs\\Датасет\\dataset\\images",
+    "query": "runs\\exp-0007\\val_ema\\query.csv",
+    "gallery": "runs\\exp-0007\\val_ema\\gallery.csv"
+  },
+  "latency_b1_ms": 20.92084992909804,
+  "latency_b1": {
+    "median_ms": 20.92084992909804,
+    "mean_ms": 21.512203328699496,
+    "p90_ms": 26.312300004065037,
+    "std_ms": 3.7103691326866475,
+    "min_ms": 15.734200016595423,
+    "n_warmup": 50,
+    "n_measured": 300
+  },
+  "throughput_fps_best": 216.6062775472746,
+  "throughput": {
+    "runs": [
+      {
+        "batch_size": 1,
+        "seconds": 10.001118999905884,
+        "images": 749,
+        "fps": 74.89161962846842,
+        "prefetch_workers": 4
+      },
+      {
+        "batch_size": 8,
+        "seconds": 10.010868399986066,
+        "images": 2160,
+        "fps": 215.765497427077,
+        "prefetch_workers": 4
+      },
+      {
+        "batch_size": 16,
+        "seconds": 10.027441399986856,
+        "images": 2160,
+        "fps": 215.40888785476537,
+        "prefetch_workers": 4
+      },
+      {
+        "batch_size": 32,
+        "seconds": 10.04587689996697,
+        "images": 2176,
+        "fps": 216.6062775472746,
+        "prefetch_workers": 4
+      }
+    ],
+    "seconds_per_run": 10.0,
+    "batches": [
+      1,
+      8,
+      16,
+      32
+    ]
+  },
+  "weights_mb": 344.83255100250244,
+  "weight_files": [
+    {
+      "path": "artifacts\\dinov2_b_fp16.onnx",
+      "size_mb": 164.5352907180786
+    },
+    {
+      "path": "artifacts\\siglip2_fp16.onnx",
+      "size_mb": 180.29726028442383
+    }
+  ],
+  "peak_vram_mb": 15955.5,
+  "weights_limit_mb": 2048,
+  "pass_weights_gate": true,
+  "draft_factor": 1.0,
+  "fusion_w": 0.6,
+  "baseline_vram_mb": 2105.5,
+  "peak_vram_mb_nvidia": 15955.5
+}

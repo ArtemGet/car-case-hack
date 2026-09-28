@@ -1,0 +1,43 @@
+[project]
+name = "vehicle-reid"
+version = "0.1.0"
+description = "Vehicle ReID, open-set — ЛЦТ 2026 (Фалькон Тех), задача №7"
+requires-python = ">=3.10"
+# Exact pins, kept in lock-step with requirements.txt / requirements-dev.txt
+# (CR-18). No ">=" on any dependency. GPU runtime: onnxruntime-gpu REPLACES
+# onnxruntime (same import namespace) — never install both.
+dependencies = [
+    "torch==2.6.0",
+    "torchvision==0.21.0",
+    "numpy==2.1.0",
+    "pandas==2.2.3",
+    "pillow==12.2.0",
+    "opencv-python==5.0.0.93",
+    "pyyaml==6.0.2",
+    "timm==1.0.11",
+    "transformers==5.6.2",
+    "onnxruntime-gpu==1.26.0",
+    "onnx==1.23.0",
+    "optuna==4.1.0",
+    "tensorboard==2.18.0",
+    "matplotlib==3.10.0",
+    "scikit-learn==1.6.0",
+    "fastapi==0.136.1",
+    "uvicorn[standard]==0.52.1",
+    "pydantic==2.13.4",
+    "faiss-cpu==1.9.0",
+]
+
+[project.optional-dependencies]
+# Mirrors requirements-dev.txt (CR-18).
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.8.6",
+    "mypy==1.14.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100

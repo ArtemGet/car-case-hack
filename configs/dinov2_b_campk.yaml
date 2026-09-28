@@ -1,0 +1,35 @@
+# W1-4b: DINOv2-B with CAMERA-AWARE PK sampling.
+# Each identity's K frames are biased towards distinct camera_ids, so every
+# batch holds cross-camera positives of the same vehicle (camera is never a
+# network input — sampling only). Same protocol as configs/dinov2_b.yaml.
+exp_name: dinov2_b_campk
+backbone: dinov2_b
+pretrained: true
+image_size: 224
+emb_dim: 512
+margin: 0.30
+scale: 30.0
+gem_p: 3.0
+
+epochs: 30
+p: 16
+k: 4
+camera_aware_pk: true
+lr: 3.0e-4
+backbone_lr_scale: 0.10
+weight_decay: 0.02
+warmup_epochs: 3
+label_smoothing: 0.10
+amp: bf16
+ema: true
+ema_decay: 0.999
+ema_start: 3
+num_workers: 12
+device: cuda
+seed: 42
+
+val_fraction: 0.20
+open_set_fraction: 0.20
+eval_every: 2
+draft_factor: 1.2
+cache_size: 320

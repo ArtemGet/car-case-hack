@@ -1,0 +1,29 @@
+# Baseline experiment W1-3: ConvNeXt-T + GeM + BNNeck + ArcFace.
+# Usage: python -m reid.train --config configs/baseline.yaml --out runs/<exp_id> \
+#            --dataset "docs/Датасет/dataset"
+exp_name: baseline_convnext_t
+backbone: convnext_tiny          # convnext_tiny | resnet50
+pretrained: true
+image_size: 224
+emb_dim: 512
+margin: 0.30
+scale: 30.0
+gem_p: 3.0
+
+epochs: 5
+batch_size: 64
+p: 16                            # identities per batch
+k: 4                             # frames per identity per batch
+lr: 3.0e-4
+weight_decay: 5.0e-4
+warmup_epochs: 1
+label_smoothing: 0.10
+num_workers: 12
+device: cuda
+seed: 42
+
+val_fraction: 0.20
+open_set_fraction: 0.20
+eval_every: 2
+draft_factor: 1.2
+cache_size: 320

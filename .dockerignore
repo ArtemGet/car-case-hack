@@ -1,0 +1,37 @@
+# Keep the build context small and the runtime image free of dev-only material.
+# Weights are copied explicitly (artifacts/*.onnx) by the Dockerfile; everything
+# else here must never enter the image.
+
+# --- planning / hidden from submission ---
+docs/
+.opencode/
+AGENTS.md
+
+# --- dev checkpoints, experiment outputs, caches ---
+runs/
+out/
+reports/
+tests/
+docs/presentation/
+.github/
+
+# --- data / large caches ---
+dataset/
+data/
+artifacts/cache/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# --- misc ---
+*.log
+.DS_Store
+Thumbs.db
+node_modules/
+.git/
+.gitignore

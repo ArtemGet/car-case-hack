@@ -1,0 +1,40 @@
+{
+  "agent": "perf-engineer",
+  "task": "W2-3 ONNX fusion verification",
+  "dino_model": "artifacts\\dinov2_b_fp16.onnx",
+  "siglip_model": "artifacts\\siglip2_fp16.onnx",
+  "fusion_w": 0.6,
+  "config": {
+    "pool": 200,
+    "k1": 6,
+    "k2": 3,
+    "lam": 0.6
+  },
+  "baseline": {
+    "mAP@10": 0.6454331335708887,
+    "Rank-1": 0.6462585034013606,
+    "Rank-5": 0.8197278911564626,
+    "mAP_full": 0.6709670215888899,
+    "mINP": 0.5943548389686091,
+    "n_scored": 294,
+    "n_openset_excluded": 81
+  },
+  "rerank": {
+    "mAP@10": 0.6899303530936185,
+    "Rank-1": 0.6836734693877551,
+    "Rank-5": 0.7925170068027211,
+    "mAP_full": 0.6709670215888899,
+    "mINP": 0.5943548389686091,
+    "n_scored": 294,
+    "n_openset_excluded": 81
+  },
+  "reference_exp0038": {
+    "baseline_mAP@10": 0.6451957806932296,
+    "rerank_mAP@10": 0.6841663742216464
+  },
+  "val": {
+    "n_query": 375,
+    "n_gallery": 1528
+  },
+  "latency_extract_s": 35.56745100021362
+}

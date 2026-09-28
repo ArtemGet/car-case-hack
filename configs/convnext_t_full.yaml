@@ -1,0 +1,32 @@
+# W1-5: full ConvNeXt-T run (30 epochs) for a fair same-protocol comparison
+# against DINOv2-B (configs/dinov2_b.yaml). Same head, split, PK-sampling, aug.
+# Usage: python -m reid.train --config configs/convnext_t_full.yaml --out runs/<id> \
+#            --dataset "docs/Датасет/dataset"
+exp_name: convnext_t_full
+backbone: convnext_tiny
+pretrained: true
+image_size: 224
+emb_dim: 512
+margin: 0.30
+scale: 30.0
+gem_p: 3.0
+
+epochs: 30
+p: 16
+k: 4                             # batch=64
+lr: 3.0e-4
+weight_decay: 5.0e-4
+warmup_epochs: 2
+label_smoothing: 0.10
+amp: bf16
+ema: true
+ema_decay: 0.999
+num_workers: 12
+device: cuda
+seed: 42
+
+val_fraction: 0.20
+open_set_fraction: 0.20
+eval_every: 2
+draft_factor: 1.2
+cache_size: 320

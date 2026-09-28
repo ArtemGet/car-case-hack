@@ -1,0 +1,39 @@
+# DEMO / PROTOTYPE runtime dependencies — exact pins. No ">=" anywhere.
+#
+# This is the CPU-only dependency set for `Dockerfile.prototype` /
+# `docker-compose.prototype.yml`: a self-contained demo for a small box
+# (2 vCPU / 2 GB RAM / NO GPU). It is intentionally DIFFERENT from
+# `requirements-runtime.txt` (the graded GPU image):
+#
+#   * NO torch / torchvision       — the CPU demo never touches the CUDA stack;
+#   * NO onnxruntime-gpu           — CPU-only `onnxruntime` instead (same
+#                                    `onnxruntime` import namespace, so the two
+#                                    must never be installed together);
+#   * NO training/optimisation libs.
+#
+# The CPU inference path (`service.infer.cpu_backend` -> `service.api.CpuSiglipEngine`)
+# is a pure PIL + NumPy pre-process over the SigLIP2 ONNX graph, so this minimal set
+# is enough to serve `/health`, `/api/v1/models`, `/api/v1/search` and `/api/v1/explain`.
+#
+# Versions are aligned 1:1 with `requirements-runtime.txt` where a shared pin exists.
+#
+# NOTE ON RUNTIME: the demo serves the SigLIP2-only option (variant `siglip`); the
+# DINOv2 / fusion variants need CUDA and stay in the graded `Dockerfile`.
+
+# ---- core / tensor / imaging ----
+numpy==2.1.0
+pandas==2.2.3
+pillow==12.2.0
+opencv-python==5.0.0.93
+pyyaml==6.0.2
+
+# ---- ONNX runtime (CPU only; replaces onnxruntime-gpu) ----
+onnxruntime==1.26.0
+
+# ---- API ----
+fastapi==0.136.1
+uvicorn[standard]==0.52.1
+pydantic==2.13.4
+
+# ---- retrieval (optional static gallery: numpy fallback when faiss is absent) ----
+faiss-cpu==1.9.0

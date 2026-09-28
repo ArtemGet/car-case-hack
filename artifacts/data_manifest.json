@@ -1,0 +1,12 @@
+{
+  "csv_sha256": {
+    "test_gallery.csv": "a64ed21fa39bbfd8c7a172468d043415800500b6ed695cdb8162188cf9005496",
+    "test_query.csv": "97e1ed21942bae9c95b1ce2e5d339d9f635bf49fa484367e6b19349789bb9b4c",
+    "train.csv": "bd1df45b052ae9aabb7fd356898e244875f8cad2f111a3f76977c1b90bce9268"
+  },
+  "dataset_dir": "docs/Датасет/dataset",
+  "images_list_digest_algo": "sha256 over sorted '<filename>\\t<size>\\n' lines",
+  "images_list_digest_sha256": "cb82fcd86f49355fbcf231ff4de8bbca471f3a32fc349356a6233db206395663",
+  "images_total_bytes": 7503286826,
+  "n_images": 11416
+}

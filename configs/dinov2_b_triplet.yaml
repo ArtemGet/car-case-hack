@@ -1,0 +1,45 @@
+# EX-4 fallback: in-domain DINOv2-B + ArcFace + batch-hard triplet.
+# No external labelled vehicle-ReID dataset was accessible without auth/registration
+# (see reports/exp-0078-ex4.json): the same recipe as exp-0007 plus a metric-learning
+# term, to test whether a more discriminative DINOv2 branch improves OUR fusion.
+# No hflip (reid/data/aug.py); camera_id never enters the net; test never used.
+exp_name: dinov2_b_arcface_triplet
+backbone: dinov2_b               # timm vit_base_patch14_dinov2.lvd142m (input /14)
+pretrained: true
+image_size: 224                  # 224 = 16*14 (patch14)
+emb_dim: 512
+margin: 0.30
+scale: 30.0
+gem_p: 3.0
+
+epochs: 24
+p: 16                            # identities per batch
+k: 4                             # frames per identity per batch  (batch=64)
+lr: 3.0e-4                       # head lr; backbone lr = lr * backbone_lr_scale
+backbone_lr_scale: 0.10
+weight_decay: 0.02
+warmup_epochs: 3
+label_smoothing: 0.10
+amp: bf16
+ema: true
+ema_decay: 0.999
+ema_start: 3
+triplet_weight: 0.5              # ArcFace + 0.5 * batch_hard_triplet
+triplet_margin: 0.30
+num_workers: 12
+prefetch_factor: 6
+device: cuda
+seed: 42
+
+val_fraction: 0.20
+open_set_fraction: 0.20
+eval_every: 1
+eval_sources: auto
+reuse_val_loader: true
+eval_num_workers: 2
+eval_tensor_cache: true
+eval_cache_workers: 0
+eval_batch_size: 128
+channels_last: false
+draft_factor: 1.2
+cache_size: 320

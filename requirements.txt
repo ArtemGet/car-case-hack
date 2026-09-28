@@ -1,0 +1,49 @@
+# Runtime/solution dependencies — exact pins. No ">=" anywhere.
+#
+# Base environment (verified on the stand host: Python 3.12, CUDA 12.2 driver,
+# A5000; image base is nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04 + py3.10).
+# The offline image installs this file in the builder stage, then runs with no
+# network. See the NOTE at the bottom for pins to confirm at export time.
+
+# ---- core / tensor ----
+torch==2.6.0
+torchvision==0.21.0
+numpy==2.1.0
+pandas==2.2.3
+pillow==12.2.0
+opencv-python==5.0.0.93
+pyyaml==6.0.2
+
+# ---- model backbones (runtime: reid.models) ----
+timm==1.0.11
+transformers==5.6.2            # SigLIP2 NaFlex config (train/export)
+
+# ---- ONNX runtime (GPU) ----
+# onnxruntime-gpu REPLACES onnxruntime: same `onnxruntime` import namespace, so
+# they must never be installed together.
+#   * The CUDAExecutionProvider needs torch's bundled cuBLAS/cuDNN on the library
+#     search path (see Dockerfile ldconfig + docker/entrypoint.sh). Otherwise ORT
+#     silently falls back to CPU (~60 FPS instead of ~216 FPS on fusion).
+#   * CPU-only targets (e.g. CI) should swap this for `onnxruntime==1.26.0`.
+onnxruntime-gpu==1.26.0
+onnx==1.23.0                   # export only (reid.export.*)
+
+# ---- training / optimisation / analysis (not needed at inference) ----
+optuna==4.1.0
+tensorboard==2.18.0
+matplotlib==3.10.0
+scikit-learn==1.6.0
+
+# ---- API ----
+fastapi==0.136.1
+uvicorn[standard]==0.52.1
+pydantic==2.13.4
+
+# ---- retrieval ----
+faiss-cpu==1.9.0
+
+# NOTE (re-lock at export / W3): the pins below were aligned to the versions
+# actually installed and exercised on the feed host (torch/torchvision/onnxruntime/
+# timm/pillow are confirmed). Confirm against the frozen offline image before the
+# final build, and pick CPU (`onnxruntime`) vs GPU (`onnxruntime-gpu`) per target:
+#   transformers, fastapi, uvicorn, pydantic, scikit-learn, opencv-python, pytest.

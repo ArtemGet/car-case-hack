@@ -1,0 +1,37 @@
+# Runtime / service dependencies ONLY — exact pins. No ">=" anywhere.
+#
+# This is the MINIMAL set the offline image and the inference service need
+# (CR-18 / CR-19): batch runner (`service.infer.run`), FastAPI service
+# (`service.api.app`) and retrieval. The full training/optimisation stack
+# (optuna, tensorboard, matplotlib, scikit-learn, timm, transformers, onnx,
+# torchvision training paths, ...) lives in requirements.txt and must NOT be
+# installed in the runtime image — it blew the build up to gigabytes.
+#
+# Base image is python:3.12-slim (builder) -> python:3.12-slim (runtime), see
+# Dockerfile. GPU libs come from the torch cu124 wheels + onnxruntime-gpu.
+#
+# IMPORTANT — onnxruntime-gpu REPLACES onnxruntime: same `onnxruntime` import
+# namespace, so the two must never be installed together. The CUDAExecutionProvider
+# additionally needs torch's bundled cuBLAS/cuDNN on the library search path
+# (Dockerfile ldconfig + docker/entrypoint.sh LD_LIBRARY_PATH), else ORT silently
+# falls back to CPU (~60 FPS vs ~216 FPS on fusion).
+
+# ---- core / tensor / imaging ----
+torch==2.6.0
+torchvision==0.21.0
+numpy==2.1.0
+pandas==2.2.3
+pillow==12.2.0
+opencv-python==5.0.0.93
+pyyaml==6.0.2
+
+# ---- ONNX runtime (GPU) ----
+onnxruntime-gpu==1.26.0
+
+# ---- API ----
+fastapi==0.136.1
+uvicorn[standard]==0.52.1
+pydantic==2.13.4
+
+# ---- retrieval ----
+faiss-cpu==1.9.0

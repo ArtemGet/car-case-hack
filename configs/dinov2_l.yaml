@@ -1,0 +1,42 @@
+# W4.5-B: DINOv2-L/14 (timm reg4) in-domain fine-tune, same recipe as dinov2_b.
+# Hypothesis H-0024: an in-domain fine-tuned LARGE DINOv2 beats the champion's
+# (smaller) fine-tuned DINOv2-B component, lifting fusion mAP@10 above 0.7234.
+# Usage: python -m reid.train --config configs/dinov2_l.yaml --out runs/exp-0073-dinov2l-ft
+exp_name: dinov2_l_arcface
+backbone: dinov2_l               # timm vit_large_patch14_reg4_dinov2.lvd142m (input /14)
+pretrained: true
+image_size: 224                  # 224 = 16*14 (patch14)
+emb_dim: 512
+margin: 0.30
+scale: 30.0
+gem_p: 3.0
+
+epochs: 10
+p: 16
+k: 3                             # batch 48 (ViT-L activations ~2.5x ViT-B)
+lr: 3.0e-4
+backbone_lr_scale: 0.10
+weight_decay: 0.02
+warmup_epochs: 2
+label_smoothing: 0.10
+amp: bf16
+ema: true
+ema_decay: 0.999
+ema_start: 2
+num_workers: 8
+prefetch_factor: 6
+device: cuda
+seed: 42
+
+val_fraction: 0.20
+open_set_fraction: 0.20
+eval_every: 1
+eval_sources: auto
+reuse_val_loader: true
+eval_num_workers: 2
+eval_tensor_cache: true
+eval_cache_workers: 0
+eval_batch_size: 64
+channels_last: false
+draft_factor: 1.2
+cache_size: 320

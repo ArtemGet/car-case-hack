@@ -1,0 +1,40 @@
+# W1-5 sweep: DINOv2-B @224, 60 epochs, ArcFace margin 0.40 (vs 0.30 champion).
+# Same pipeline as configs/dinov2_b.yaml; only the angular margin differs.
+exp_name: dinov2_b_m040
+backbone: dinov2_b
+pretrained: true
+image_size: 224
+emb_dim: 512
+margin: 0.40
+scale: 30.0
+gem_p: 3.0
+
+epochs: 60
+p: 16
+k: 4
+lr: 3.0e-4
+backbone_lr_scale: 0.10
+weight_decay: 0.02
+warmup_epochs: 3
+label_smoothing: 0.10
+amp: bf16
+ema: true
+ema_decay: 0.999
+ema_start: 3
+num_workers: 12
+prefetch_factor: 6
+device: cuda
+seed: 42
+
+val_fraction: 0.20
+open_set_fraction: 0.20
+eval_every: 1
+eval_sources: auto
+reuse_val_loader: true
+eval_num_workers: 2
+eval_tensor_cache: true
+eval_cache_workers: 0
+eval_batch_size: 128
+channels_last: false
+draft_factor: 1.2
+cache_size: 320

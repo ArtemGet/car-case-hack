@@ -1,0 +1,48 @@
+# DEMO / PROTOTYPE compose — CPU-only, NO GPU, NO pgvector.
+#
+#   docker compose -f docker-compose.prototype.yml up --build
+#
+# Brings up exactly two services:
+#   * api  — `Dockerfile.prototype` (FastAPI/uvicorn, SigLIP2 ONNX on CPU EP),
+#            published on host :80, capped at ~1.9 GB RAM;
+#   * web  — nginx serving the prebuilt `web/dist` SPA and proxying /api + /health
+#            to `api:8000`, published on host :8080.
+#
+# This does NOT touch the graded `docker-compose.yml` (GPU, `gpus: all`, pgvector).
+# No credentials, no external hosts, no runtime downloads: the weight is baked
+# into the image.
+name: vehicle-reid-prototype
+
+services:
+  # HTTP API over the CPU inference engine. Offline: weight baked into the image.
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.prototype
+    image: vehicle-reid:prototype
+    ports:
+      - "80:8000"
+    environment:
+      - REID_API_ENGINE=infer
+      - REID_API_DEVICE=cpu
+    # 2 GB box: keep the API under ~1.9 GB (leaves headroom for the OS/nginx).
+    mem_limit: 1900m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    restart: unless-stopped
+
+  # Web UI (prebuilt static bundle) served by nginx; /api + /health -> api:8000.
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web/dist:/usr/share/nginx/html:ro
+      - ./web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped

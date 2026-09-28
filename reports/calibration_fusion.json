@@ -1,0 +1,30 @@
+{
+  "task": "W2-5-final",
+  "agent": "inference-service",
+  "variant": "fusion",
+  "pipeline": "L2(concat[L2(SigLIP2 512d ONNX fp16), 0.8*L2(DINOv2-B@224 512d ONNX fp16)]) + GPU-preproc (CUDA letterbox+normalize+IOBinding) + per-query k-reciprocal (k1=8,k2=3,lam=0.5,pool=300); TTA OFF (224-only)",
+  "config": {
+    "fusion_w": 0.8,
+    "tta_scales": [224],
+    "preproc": "gpu",
+    "rerank": {"k1": 8, "k2": 3, "lam": 0.5, "pool_size": 300},
+    "crop_cache": null,
+    "backends": "ONNX fp16 (CUDAExecutionProvider, IOBinding)",
+    "source_run": "runs/W2-5-val-final"
+  },
+  "split": {"seed": 42, "n_query": 375, "n_gallery": 1528, "n_openset": 81},
+  "selection_rule": "max 0.7*F1 + 0.3*TNR (tie: F1, then TNR, then lower threshold); calibrated ONLY on the val split, not on test",
+  "chosen": {
+    "threshold": 0.6970806121826172,
+    "TP": 277, "FP": 1, "FN": 16, "TN": 81,
+    "accepted": 278, "refused": 97,
+    "Precision": 0.9964028776978417,
+    "Recall": 0.9453924914675768,
+    "F1": 0.9702276707530647,
+    "TNR": 1.0,
+    "score_0.7F1+0.3TNR": 0.9791593695271452
+  },
+  "note": "Recalibrated for the variant-A deploy scale: 224-only GPU-preproc fusion, no crop cache. The previous fp16 constant 0.6897585988 was fitted to the 224/280 TTA scale; on the 224-only scale this point is the argmax of the candidate score. Consumed by service.infer.run.resolve_threshold (order: --threshold -> env -> this file -> reid.calibrate default).",
+  "verdict": "pending",
+  "verified_by": null
+}

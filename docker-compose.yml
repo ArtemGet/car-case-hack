@@ -1,0 +1,87 @@
+# `docker compose up` brings up the whole service: batch inference + HTTP API +
+# web UI + vector store. GPU access needs the NVIDIA Container Toolkit on the
+# host (`gpus: all` == `--gpus all`).
+#
+# Inference is fully offline: weights are baked into the image (artifacts/*.onnx),
+# no model download and no external network call at runtime.
+#
+# No real credentials are stored here. The database password is read from the
+# environment with a throwaway local-dev default; set POSTGRES_PASSWORD for any
+# non-local run.
+name: vehicle-reid
+
+services:
+  # Batch inference runner (offline, one command). GPU-bound, runs once and exits:
+  #   /in/images + /in/test_query.csv + /in/test_gallery.csv -> /out/{3 files}
+  infer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: vehicle-reid:runtime
+    gpus: all
+    volumes:
+      - ./data:/in:ro
+      - ./out:/out
+    restart: "no"
+
+  # HTTP API (FastAPI/Swagger) over the inference model.
+  # ASGI target is service.api.app:app (service/api/app.py: `app = create_app()`).
+  api:
+    image: vehicle-reid:runtime
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    gpus: all
+    # The image ENTRYPOINT is the batch runner; override it for the API so the
+    # lib-path shim is kept but the process is uvicorn, not service.infer.run.
+    entrypoint: ["/usr/local/bin/vehicle-reid-entrypoint", "uvicorn"]
+    command:
+      - service.api.app:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+    environment:
+      - MODEL_PATH=/app/artifacts/siglip2_fp16.onnx
+      - DINO_MODEL_PATH=/app/artifacts/dinov2_b_fp16.onnx
+      - VECTOR_STORE_URL=postgresql://reid:${POSTGRES_PASSWORD:-reid}@vectors:5432/reid
+    ports:
+      - "8000:8000"
+    depends_on:
+      vectors:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Web UI (static) served by nginx.
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Vector store (pgvector) for gallery embeddings / retrieval.
+  vectors:
+    image: pgvector/pgvector:pg16
+    environment:
+      - POSTGRES_USER=reid
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-reid}
+      - POSTGRES_DB=reid
+    volumes:
+      - vectors-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reid -d reid"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  vectors-data:
