@@ -105,7 +105,12 @@ def _add_ort_dll_dirs():
 
 
 def _cuda_ort_providers(require_cuda: bool = True):
-    """Return ``[CUDA, CPU]`` providers; raise if CUDA is unavailable."""
+    """Return ``[CUDA, CPU]`` providers; raise if CUDA is unavailable.
+
+    Optional ``REID_ORT_*`` env vars cap the CUDA EP arena (see
+    :mod:`reid.export.ort_env`); with none set the returned list is exactly the
+    previous default.
+    """
     import onnxruntime as ort
     avail = ort.get_available_providers()
     print(f"[ort] available providers: {avail}", flush=True)
@@ -115,7 +120,9 @@ def _cuda_ort_providers(require_cuda: bool = True):
                 "CUDAExecutionProvider unavailable; forward must run on CUDA "
                 f"(providers={avail}). Refusing CPU fallback.")
         _add_ort_dll_dirs()
-        return ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        from reid.export.ort_env import apply_cuda_options
+        return apply_cuda_options(
+            ["CUDAExecutionProvider", "CPUExecutionProvider"])
     return ["CPUExecutionProvider"]
 
 

@@ -171,8 +171,12 @@ def cuda_providers(no_fallback: bool = False):
             "CUDAExecutionProvider unavailable; CUDA is required for model "
             f"forward (providers={avail}). Refusing to fall back to CPU.")
     if no_fallback:
-        return [("CUDAExecutionProvider", {"device_id": 0})]
-    return ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        base = [("CUDAExecutionProvider", {"device_id": 0})]
+    else:
+        base = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+    # Optional env-gated arena cap; with no REID_ORT_* set this is a no-op.
+    from reid.export.ort_env import apply_cuda_options
+    return apply_cuda_options(base)
 
 
 def require_cuda_session(sess, what="ORT session"):

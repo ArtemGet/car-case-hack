@@ -117,12 +117,19 @@ def enable_ort_cuda() -> None:
 def ort_session(path: str, device: str):
     import onnxruntime as ort
 
+    from reid.export.ort_env import apply_cuda_options, cuda_provider_options
+
     so = ort.SessionOptions()
     so.log_severity_level = 3
     providers = ["CPUExecutionProvider"]
     if device.startswith("cuda"):
         enable_ort_cuda()
         providers = ["CUDAExecutionProvider", "CPUExecutionProvider"]
+        # Optional arena cap (env-gated); no env -> providers stay plain strings.
+        opts = cuda_provider_options()
+        if opts:
+            print(f"[bench] ORT CUDA provider options: {opts}", flush=True)
+        providers = apply_cuda_options(providers)
     return ort.InferenceSession(path, sess_options=so, providers=providers)
 
 
@@ -895,6 +902,49 @@ class VramMonitor(threading.Thread):
         self.join(timeout=2.0)
 
 
+class SmiMonitor(threading.Thread):
+    """Sample ``nvidia-smi`` device memory used and keep the maximum.
+
+    This is the organisers' authoritative VRAM number (device-wide, includes
+    the ORT CUDA arena). Falls back to no-op when ``nvidia-smi`` is unavailable.
+    """
+
+    def __init__(self, interval: float = 0.2):
+        super().__init__(daemon=True)
+        self.interval = float(interval)
+        self.max_mb = 0.0
+        self.ok = True
+        self._evt = threading.Event()
+
+    def sample(self):
+        import subprocess
+
+        try:
+            out = subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.used",
+                 "--format=csv,noheader,nounits"],
+                capture_output=True, text=True, timeout=5)
+            if out.returncode != 0:
+                return None
+            vals = [int(x.strip()) for x in out.stdout.splitlines() if x.strip()]
+            return float(max(vals)) if vals else None
+        except Exception:  # noqa: BLE001
+            return None
+
+    def run(self):
+        while not self._evt.is_set():
+            v = self.sample()
+            if v is None:
+                self.ok = False
+                return
+            self.max_mb = max(self.max_mb, v)
+            self._evt.wait(self.interval)
+
+    def stop(self):
+        self._evt.set()
+        self.join(timeout=3.0)
+
+
 def measure_latency_extract(backend, items, warmup, runs):
     backend.sync()
     for i in range(warmup):
@@ -1040,6 +1090,8 @@ def run_multi_backbone(args, items, device):
     base = mon.sample()
     mon.base_mb = base or 0.0
     mon.start()
+    smi = SmiMonitor()
+    smi.start()
 
     lat = measure_latency_extract(backend, items, args.warmup, args.latency_runs)
     print(f"[bench] latency_b1 median={lat['median_ms']:.2f} ms "
@@ -1055,6 +1107,7 @@ def run_multi_backbone(args, items, device):
     best = max((r["fps"] for r in tp_runs), default=0.0)
 
     mon.stop()
+    smi.stop()
     peak_vram_mb = mon.max_mb
     extra = {
         "draft_factor": args.draft_factor,
@@ -1062,6 +1115,7 @@ def run_multi_backbone(args, items, device):
         "fusion_w": args.fusion_w if args.variant == "fusion" else None,
         "baseline_vram_mb": base,
         "peak_vram_mb_nvidia": peak_vram_mb,
+        "peak_vram_smi_mb": smi.max_mb if smi.ok else None,
     }
     report = _write_report(args, device, model_desc, backend.kind, items, lat,
                            tp_runs, best, peak_vram_mb, weights_mb, weight_files,

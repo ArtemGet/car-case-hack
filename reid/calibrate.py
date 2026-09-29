@@ -149,6 +149,31 @@ DEFAULT_THRESHOLD_FUSION_FINAL = 0.6970806121826172
 # getattr(). Всегда указывает на КАНОНИЧЕСКИЙ финальный порог выше.
 DEFAULT_THRESHOLD_FUSION_W08_FP16_224 = DEFAULT_THRESHOLD_FUSION_FINAL
 
+# ---------------------------------------------------------------------------
+# CPU-прототип: SigLIP2 ONNX (CPUExecutionProvider) + PIL-препроцесс
+# ---------------------------------------------------------------------------
+# Порог отказа для CPU-демо (service.infer.cpu_backend; torch-free, ORT CPU EP,
+# aspect-preserving PIL-кроп). Снят на ТОМ ЖЕ замороженном val-сплите, что и
+# GPU-пороги: reid.data.splits.holdout_val(train.csv, val_fraction=0.2,
+# open_set_fraction=0.2, seed=42) -> 375 query / 1528 gallery / 81 open-set.
+#
+# Скор CPU-демо — ЧИСТЫЙ cosine top-1 БЕЗ re-rank (ровно то, что делает
+# service/api на CPU: один SigLIP2-бэкенд, ни DINOv2, ни k-reciprocal), поэтому
+# шкала отличается от GPU-пути: GPU-порог 0.8943736 снят на шкале
+# GPU-препроцесса fusion/siglip, CPU-шкала своя. Точка подобрана как
+# max(0.7·F1 + 0.3·TNR) и перепроверена официальным evaluate.py:
+#   F1 = 0.9255898366606169, TNR = 0.9753086419753086,
+#   балл = 0.9405054782550244, PR-AUC = 0.9802736370432141,
+#   TP/FP/FN/TN = 255/7/34/79 (262 принято / 113 отказ; 81 open-set).
+# Эмбеддинги: artifacts/siglip2_fp16.onnx, threads=8, batch=32, ~165 мс/кадр.
+# Отчёт: reports/calibration_siglip_cpu.json/.md; инструмент
+# tools/calibrate_siglip_cpu.py. НЕ подбирать по тесту.
+#
+# ВАЖНО: это дефолт ТОЛЬКО для CPU-ветки SigLIP2 (service/api CpuSiglipEngine ->
+# engine.resolve_siglip_threshold). GPU-пороги (fusion/siglip/dino выше) НЕ
+# затронуты.
+DEFAULT_THRESHOLD_SIGLIP_CPU = 0.8915883302688599
+
 
 def is_accepted(score: float, threshold: float = DEFAULT_THRESHOLD) -> bool:
     """Принять (True) или отказать (False) по confidence ``score``."""
