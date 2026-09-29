@@ -39,6 +39,17 @@ python -m service.infer.run \
 python tools/validate_format.py --out /out --query /in/test_query.csv --gallery /in/test_gallery.csv
 ```
 
+## 2.1 Веса и Git LFS
+
+Два сдаваемых ONNX (**344.8 МБ**) хранятся через **Git LFS** (`.gitattributes`); в готовом Docker-образе
+веса уже внутри — LFS нужен только при клоне из исходников.
+
+- **Установка git-lfs :** Windows — `winget install GitHub.GitLFS` (или входит в Git for Windows);
+  macOS — `brew install git-lfs`; Linux — `sudo apt-get install git-lfs` (Debian/Ubuntu).
+- **Затем:** `git lfs install`, далее `git clone <repo>` (веса подтянутся) или `git lfs pull` после клона.
+- **Проверка:** `git lfs ls-files` — оба ONNX (~180 / ~165 МБ). Если файлы по ~134 байта — это LFS-указатель, выполни `git lfs pull`.
+- **Без LFS (альтернатива):** скачивание весов по URL + sha256 — см. [`documentation/DEPLOYMENT.md`](documentation/DEPLOYMENT.md) §Publishing.
+
 ## 3. Тесты
 
 ```bash

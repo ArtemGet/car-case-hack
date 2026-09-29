@@ -144,6 +144,17 @@ committed as plain blobs. Two supported layouts; pick one and document the link.
 `.gitattributes` marks every `artifacts/*.onnx` as `filter=lfs diff=lfs
 merge=lfs -text`, so a normal `git add` stores a pointer and the bytes in LFS.
 
+Install the `git-lfs` client once per machine (all OSes):
+
+```bash
+# Windows
+winget install GitHub.GitLFS    # or: it ships with Git for Windows
+# macOS
+brew install git-lfs
+# Linux
+sudo apt-get install git-lfs
+```
+
 ```bash
 git lfs install                 # once per machine
 git init                        # already done in the working tree
@@ -160,7 +171,9 @@ git lfs pull                    # materialize the ONNX before `docker build`
 The `Dockerfile` `COPY artifacts/siglip2_fp16.onnx artifacts/dinov2_b_fp16.onnx
 artifacts/data_manifest.json ./artifacts/` then finds both files on a clean
 clone. GitHub serves LFS to public repos within the free quota; verify with
-`git lfs ls-files` (must list the two deploy ONNX).
+`git lfs ls-files` (must list the two deploy ONNX, **~180 / ~165 MB** each).
+If a downloaded `.onnx` is only **~134 bytes** it is an LFS pointer, not the
+weights — run `git lfs pull` before `docker build`.
 
 ### Option B — no LFS: fetch weights by URL + sha256
 
