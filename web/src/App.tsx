@@ -183,7 +183,7 @@ export default function App() {
           <h1>Vehicle ReID · открытый поиск по кропу</h1>
           <p className="subtitle">
             Загрузите кадр, задайте BBox кузова — сервис вернёт top-N галереи,
-            confidence и признак отказа. Grad-CAM показывает, куда смотрит модель.
+            confidence и признак отказа.
           </p>
         </div>
         <HealthBadge health={health} />
@@ -345,13 +345,6 @@ export default function App() {
           )}
         </section>
       </main>
-
-      <footer className="footer">
-        <span>
-          Модель выполняется на сервере. Интерфейс не содержит логики модели и не
-          обращается в интернет.
-        </span>
-      </footer>
     </div>
   );
 }

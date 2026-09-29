@@ -791,14 +791,6 @@ table.results th:nth-child(n + 3) {
   font-weight: 400;
 }
 
-.footer {
-  margin-top: 22px;
-  color: var(--muted);
-  font-size: 12px;
-  border-top: 1px solid var(--line);
-  padding-top: 12px;
-}
-
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
